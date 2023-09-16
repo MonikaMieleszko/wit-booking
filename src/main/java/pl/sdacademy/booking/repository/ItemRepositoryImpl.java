@@ -1,6 +1,8 @@
 package pl.sdacademy.booking.repository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.TypedQuery;
 import pl.sdacademy.booking.data.ItemEntity;
 import pl.sdacademy.booking.util.DatabaseUtil;
@@ -25,11 +27,24 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public void addItem(ItemEntity item) {
-
+        entityManager.getTransaction().begin();
+        entityManager.persist(item);
+        entityManager.getTransaction().commit();
     }
 
     @Override
-    public Long findItemByName(String name) {
-        return null;
+    public Long findItemByName(String searchName) {
+        TypedQuery<Long> items = entityManager
+                .createQuery("select id from ItemEntity item where name=:nameParam"
+                        , Long.class);
+        items.setParameter("nameParam", searchName);
+        try {
+            return items.getSingleResult();
+
+        } catch (NoResultException e) {
+            return null;
+        } catch (NonUniqueResultException e) {
+            return -1L;
+        }
     }
 }
